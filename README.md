@@ -14,12 +14,21 @@ context-meter keeps a small pill above the prompt. The ring fills toward the poi
 
 The thresholds are two constants at the top of `context-meter/hooks/register.tsx`.
 
+## usage-meter
+
+The five-hour plan limit is the one that actually stops you mid-task, and checking it means opening the same popover every few minutes. A percentage alone doesn't tell you much either: 70% with four hours to go means slow down, 70% with ten minutes left means keep going.
+
+usage-meter puts both numbers in one pill above the prompt, how much of the window you've used and how long until it resets, so you can decide at a glance. It turns amber at 60% and red at 85%.
+
+The two mods sit side by side in the same row. Install either or both.
+
 ## Install
 
 In a terminal Claude Code session:
 
 ```
 /plugin install context-meter --marketplace Warstellar/claude-mods
+/plugin install usage-meter --marketplace Warstellar/claude-mods
 ```
 
-Answer `y` to add the marketplace and pick the user scope. The desktop Code tab picks it up in new sessions.
+Answer `y` to add the marketplace and pick the user scope. The desktop Code tab picks them up in new sessions.

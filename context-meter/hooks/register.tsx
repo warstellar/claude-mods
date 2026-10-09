@@ -82,8 +82,9 @@ export const register: Register = on => {
   })
 
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
+    const below = await next(e)
     const snap = await read($, snapshot)
-    if (e.props.hasSurvey || snap === null) return next(e)
+    if (e.props.hasSurvey || snap === null) return below
 
     const { Box, Button, Text } = $.ui.resolve(e)
     const busy = await read($, isCompacting)
@@ -92,6 +93,7 @@ export const register: Register = on => {
       return (
         <Box>
           <Text dimColor>Context: fresh window</Text>
+          {below}
         </Box>
       )
     }
@@ -138,6 +140,7 @@ export const register: Register = on => {
             height={24}
           />
           {button}
+          {below}
         </Box>
       )
     }
@@ -148,6 +151,7 @@ export const register: Register = on => {
           {formatK(tokens)}
         </Text>
         {button}
+        {below}
       </Box>
     )
   })

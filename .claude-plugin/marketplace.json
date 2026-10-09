@@ -9,6 +9,10 @@
     {
       "name": "context-meter",
       "source": "./context-meter"
+    },
+    {
+      "name": "usage-meter",
+      "source": "./usage-meter"
     }
   ]
 }
