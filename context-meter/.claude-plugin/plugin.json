@@ -1,6 +1,6 @@
 {
   "name": "context-meter",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Always-visible context size meter above the prompt with a one-click Compact button",
   "author": { "name": "Ian Corvin", "url": "https://github.com/Warstellar" },
   "types": "./types/index.d.ts"
