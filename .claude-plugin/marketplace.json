@@ -1,0 +1,14 @@
+{
+  "name": "corvin-mods",
+  "description": "Claude Code mods by Ian Corvin",
+  "owner": {
+    "name": "Ian Corvin",
+    "url": "https://github.com/Warstellar"
+  },
+  "plugins": [
+    {
+      "name": "context-meter",
+      "source": "./context-meter"
+    }
+  ]
+}
