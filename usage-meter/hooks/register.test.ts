@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { formatLeft, level, pillSvg } from './register'
+import { formatLeft, level, pillSvg, remaining } from './register'
 
 test('levels follow the thresholds', () => {
   expect(level(30)).toBe('ok')
@@ -14,9 +14,14 @@ test('time left reads in hours and minutes', () => {
   expect(formatLeft(-5_000)).toBe('0m')
 })
 
-test('pill carries percent and countdown', () => {
+test('reads as what is left, not what is spent', () => {
+  expect(remaining(55)).toBe(45)
+  expect(remaining(104)).toBe(0)
+})
+
+test('pill carries percent left and countdown', () => {
   const svg = pillSvg(55, '2h 18m')
-  expect(svg).toContain('55%')
+  expect(svg).toContain('45%')
   expect(svg).toContain('2h 18m')
   expect(svg).not.toContain('·  ')
   expect(pillSvg(55, null)).not.toContain('·')

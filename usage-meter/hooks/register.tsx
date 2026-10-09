@@ -28,25 +28,29 @@ function textWidth(text: string): number {
   return text.length * 7.3
 }
 
-// The ring is the share of the five-hour window already spent; the label adds
-// the time until it resets, which is what decides whether to slow down.
+// Reads like a battery: the ring and the number are what's left of the
+// five-hour window, draining as you work; the countdown says when it refills.
+export function remaining(percent: number): number {
+  return Math.max(0, Math.round(100 - percent))
+}
+
 export function pillSvg(percent: number, left: string | null): string {
   const color = COLORS[level(percent)]
-  const pct = `${Math.round(percent)}%`
+  const pct = `${remaining(percent)}%`
   const rest = left === null ? '' : ` · ${left}`
   const width = Math.round(28 + textWidth(pct + rest) + 10)
-  const arc = Math.max(1.5, Math.min(1, percent / 100) * RING)
+  const arc = Math.max(1.5, Math.min(1, remaining(percent) / 100) * RING)
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="24" viewBox="0 0 ${width} 24">
 <rect x="0.5" y="0.5" width="${width - 1}" height="23" rx="11.5" fill="none" stroke="${level(percent) === 'ok' ? MUTED : color}" stroke-opacity="${level(percent) === 'ok' ? 0.35 : 0.6}"/>
 <circle cx="14" cy="12" r="6" fill="none" stroke="${MUTED}" stroke-opacity="0.35" stroke-width="2.5"/>
 <circle cx="14" cy="12" r="6" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="${arc.toFixed(2)} ${RING.toFixed(2)}" transform="rotate(-90 14 12)"/>
-<text x="28" y="16" font-family="ui-monospace, Consolas, monospace" font-size="12"><tspan fill="${color}">${pct}</tspan><tspan fill="${MUTED}">${rest}</tspan></text>
+<text x="28" y="16" font-family="'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, monospace" font-size="12" font-weight="500"><tspan fill="${color}">${pct}</tspan><tspan fill="${MUTED}">${rest}</tspan></text>
 </svg>`
 }
 
 export function pillWidth(percent: number, left: string | null): number {
-  return Math.round(28 + textWidth(`${Math.round(percent)}%` + (left === null ? '' : ` · ${left}`)) + 10)
+  return Math.round(28 + textWidth(`${remaining(percent)}%` + (left === null ? '' : ` · ${left}`)) + 10)
 }
 
 async function refresh($: Parameters<Hook<'turn.complete'>>[0]) {
@@ -94,7 +98,7 @@ export const register: Register = on => {
       <Box flexDirection="row" alignItems="center" gap={1}>
         <Svg
           source={pillSvg(win.percent, left)}
-          alt={`Five-hour usage ${Math.round(win.percent)}%${left ? `, resets in ${left}` : ''}`}
+          alt={`Five-hour limit ${remaining(win.percent)}% left${left ? `, resets in ${left}` : ''}`}
           width={pillWidth(win.percent, left)}
           height={24}
         />
