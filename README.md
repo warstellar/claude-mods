@@ -20,6 +20,8 @@ The five-hour plan limit is the one that actually stops you mid-task, and checki
 
 usage-meter puts both numbers in one pill above the prompt, how much of the window you've used and how long until it resets, so you can decide at a glance. It turns amber at 60% and red at 85%.
 
+When your pace over the last half hour would empty the window before it resets, the countdown turns into a forecast, `out in 40m`, so you know to slow down or compact while it still matters. If you'll make it to the reset, it stays out of the way.
+
 The two mods sit side by side in the same row. Install either or both.
 
 ## Install
