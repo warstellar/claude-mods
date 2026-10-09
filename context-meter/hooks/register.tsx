@@ -105,7 +105,13 @@ export const register: Register = on => {
         const { skip } = await $.session.compact()
         if (skip) $.ui.toast(`Compact skipped: ${skip}`)
       } catch {
-        $.ui.toast('Cannot compact while a turn is running')
+        // The direct call can refuse while the engine thinks it's busy; the
+        // typed /compact path queues properly, so fall back to it.
+        try {
+          await $.command.run({ command: 'compact' })
+        } catch (err) {
+          $.ui.toast(`Compact failed: ${err instanceof Error ? err.message : String(err)}`)
+        }
       } finally {
         await update($, isCompacting, () => false)
         await refresh($)
