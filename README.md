@@ -18,7 +18,7 @@ The thresholds are two constants at the top of `context-meter/hooks/register.tsx
 
 The five-hour plan limit is the one that actually stops you mid-task, and checking it means opening the same popover every few minutes. A percentage alone doesn't tell you much either: 70% with four hours to go means slow down, 70% with ten minutes left means keep going.
 
-usage-meter puts both numbers in one pill above the prompt, how much of the window is left and how long until it refills. The ring drains like a battery, so you can decide at a glance. It turns amber at 40% left and red at 15% left.
+usage-meter puts both numbers in one pill above the prompt, how much of the window you've used and how long until it resets, so you can decide at a glance. It turns amber at 60% and red at 85%.
 
 The two mods sit side by side in the same row. Install either or both.
 
