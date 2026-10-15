@@ -184,30 +184,23 @@ ${tick}
 </svg>`
 }
 
-const DOT = 10
-
-export function pillWidth(percent: number, weekDot = false): number {
-  return Math.round(28 + `${Math.round(percent)}%`.length * 7.3 + 10 + (weekDot ? DOT : 0))
+export function pillWidth(percent: number): number {
+  return Math.round(28 + `${Math.round(percent)}%`.length * 7.3 + 10)
 }
 
-// The ring is the five-hour window: share spent, colored by its own rules,
-// exactly like the 5h strip in the card. When the week is the one running
-// out, a dot in the week's color joins it, matching the Week strip.
-export function pillSvg(percent: number, lvl: Level, week: Level = 'ok'): string {
+// The ring is the five-hour window only: share spent, colored by its own
+// rules, exactly like the 5h strip in the card. The week stays in the card:
+// a weekly warning above the prompt is a standing alarm with nothing to do.
+export function pillSvg(percent: number, lvl: Level): string {
   const color = COLORS[lvl]
-  const hasDot = week !== 'ok'
-  const width = pillWidth(percent, hasDot)
+  const width = pillWidth(percent)
   const arc = Math.max(1.5, Math.min(1, percent / 100) * RING)
-  const outline = worst(lvl, week)
-  const textEnd = 28 + `${Math.round(percent)}%`.length * 7.3
-  const dot = hasDot ? `<circle cx="${(textEnd + 6).toFixed(1)}" cy="12" r="3" fill="${COLORS[week]}"/>` : ''
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="24" viewBox="0 0 ${width} 24">
-<rect x="0.5" y="0.5" width="${width - 1}" height="23" rx="11.5" fill="none" stroke="${outline === 'ok' ? MUTED : COLORS[outline]}" stroke-opacity="${outline === 'ok' ? 0.35 : 0.6}"/>
+<rect x="0.5" y="0.5" width="${width - 1}" height="23" rx="11.5" fill="none" stroke="${lvl === 'ok' ? MUTED : color}" stroke-opacity="${lvl === 'ok' ? 0.35 : 0.6}"/>
 <circle cx="14" cy="12" r="6" fill="none" stroke="${MUTED}" stroke-opacity="0.35" stroke-width="2.5"/>
 <circle cx="14" cy="12" r="6" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="${arc.toFixed(2)} ${RING.toFixed(2)}" transform="rotate(-90 14 12)"/>
 <text x="28" y="16" font-family="'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, monospace" font-size="12" font-weight="500"><tspan fill="${color}">${Math.round(percent)}%</tspan></text>
-${dot}
 </svg>`
 }
 
@@ -273,7 +266,6 @@ export const register: Register = on => {
     if (e.props.hasSurvey || win === null || e.surface !== 'desktop') return below
 
     const five = fiveLevel(win)
-    const week = weekLevel(win.week ?? null)
     const { Box, Svg, Text } = $.ui.resolve(e as typeof e & { surface: 'desktop' })
 
     // The card sits over the transcript above the pill and shows while the
@@ -305,7 +297,7 @@ export const register: Register = on => {
     return (
       <Box flexDirection="row" alignItems="center" gap={1}>
         <Box key="usage-meter">
-          <Svg source={pillSvg(win.percent, five, week)} alt={cardText(win)} width={pillWidth(win.percent, week !== 'ok')} height={24} />
+          <Svg source={pillSvg(win.percent, five)} alt={cardText(win)} width={pillWidth(win.percent)} height={24} />
           {card}
         </Box>
         {below}

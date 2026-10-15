@@ -107,11 +107,11 @@ test('the week color warns only when it runs out before the reset', () => {
   expect(weekLevel(null)).toBe('ok')
 })
 
-test('pill shows the percent, and a dot only when the week runs out', () => {
+test('pill shows the 5h percent only; the week never lights it up', () => {
   const calm = pillSvg(12, 'ok')
   expect(calm).toContain('>12%</tspan>')
+  expect(calm).not.toContain('#EF9F27')
   expect(calm).not.toContain('r="3"')
-  expect(pillSvg(12, 'ok', 'watch')).toContain('r="3" fill="#EF9F27"')
 })
 
 test('each window is one strip: spent, time gone, its color and the reset', () => {
