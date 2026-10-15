@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { formatK, level, pillSvg } from './register'
+import { formatK, level, marks, pillSvg, waitingSvg } from './register'
 
 test('levels follow the thresholds', () => {
   expect(level(80_000)).toBe('ok')
@@ -22,4 +22,23 @@ test('pill always carries the number and the level color', () => {
   expect(svg).toContain('#EF9F27')
   expect(svg).not.toContain('<animate')
   expect(pillSvg(420_000)).toContain('<animate')
+})
+
+test('a 1M window keeps the fixed marks', () => {
+  expect(marks(1_000_000)).toEqual({ watch: 250_000, compact: 400_000 })
+  expect(level(272_000, 1_000_000)).toBe('watch')
+})
+
+test('a 200K window warns before its own auto-compact', () => {
+  expect(marks(200_000)).toEqual({ watch: 120_000, compact: 160_000 })
+  expect(level(130_000, 200_000)).toBe('watch')
+  expect(level(170_000, 200_000)).toBe('compact')
+  expect(pillSvg(170_000, 200_000)).toContain('<animate')
+})
+
+test('before the first count the pill stays in place, gray, with a question mark', () => {
+  const svg = waitingSvg()
+  expect(svg).toContain('>?</tspan>')
+  expect(svg).not.toContain('#1D9E75')
+  expect(svg).not.toContain('stroke-dasharray')
 })
