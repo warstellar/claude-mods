@@ -1,7 +1,6 @@
 export type Week = {
   percent: number
   resetsAt: number | null
-  outIn: number | null
 }
 
 export type Window = {

@@ -5,18 +5,14 @@ import type { Week, Window } from '../types'
 
 const fiveHour = atom({ plugin: 'usage-meter', key: 'window' } as const, null)
 
-const HOT_AT = 85
+// Plain thresholds on what's spent: the same for the window and the week.
+const WATCH_AT = 70
+const HOT_AT = 90
 const COLORS = { ok: '#1D9E75', watch: '#EF9F27', hot: '#E24B4A' } as const
 const MUTED = '#888780'
 const RING = 2 * Math.PI * 6
 
-// The first stretch of a window is too short to judge the pace by: a single
-// reply would already put the fill past the tick.
-const FIVE_MIN_ELAPSED = 0.1
-
-// The week waits for its first half day for the same reason.
 const WEEK = 7 * 24 * 60 * 60_000
-const WEEK_MIN_ELAPSED = 12 * 60 * 60_000
 
 export function formatLeft(ms: number): string {
   const minutes = Math.max(0, Math.round(ms / 60_000))
@@ -25,17 +21,6 @@ export function formatLeft(ms: number): string {
   const m = minutes % 60
   if (d > 0) return h > 0 ? `${d}d ${h}h` : `${d}d`
   return h > 0 ? `${h}h ${m}m` : `${m}m`
-}
-
-// Milliseconds until the week runs out at its average pace so far, or null
-// when it lasts until the reset (or it's too early in the week to tell).
-export function weekForecast(percent: number, now: number, resetsAt: number | null): number | null {
-  if (resetsAt === null || percent <= 0) return null
-  const elapsed = WEEK - (resetsAt - now)
-  if (elapsed < WEEK_MIN_ELAPSED) return null
-  const msToEmpty = ((100 - percent) / percent) * elapsed
-  if (now + msToEmpty >= resetsAt) return null
-  return Math.max(0, msToEmpty)
 }
 
 export type Level = 'ok' | 'watch' | 'hot'
@@ -47,21 +32,18 @@ function elapsedShare(resetsAt: number | null, readAt: number, length: number): 
   return Math.min(1, Math.max(0, 1 - (resetsAt - readAt) / length))
 }
 
-// The color says what the strip shows: amber when the fill has passed the
-// tick (spending faster than time passes), red only when little is left.
-export function fiveLevel(win: Window): Level {
-  if (win.percent >= HOT_AT) return 'hot'
-  const elapsed = elapsedShare(win.resetsAt, win.readAt, FIVE_HOURS)
-  if (elapsed !== null && elapsed >= FIVE_MIN_ELAPSED && win.percent / 100 > elapsed) return 'watch'
+export function level(percent: number): Level {
+  if (percent >= HOT_AT) return 'hot'
+  if (percent >= WATCH_AT) return 'watch'
   return 'ok'
 }
 
-// Same rule for the week: past the tick is amber (its average pace beats the
-// reset), red only when little is left.
+export function fiveLevel(win: Window): Level {
+  return level(win.percent)
+}
+
 export function weekLevel(week: Week | null): Level {
-  if (week === null) return 'ok'
-  if (week.percent >= HOT_AT) return 'hot'
-  return week.outIn === null ? 'ok' : 'watch'
+  return week === null ? 'ok' : level(week.percent)
 }
 
 export type Strip = {
@@ -165,7 +147,6 @@ async function refresh($: Parameters<Hook<'turn.complete'>>[0]) {
       week = {
         percent: weekly.percentUsed,
         resetsAt: weekResetsAt,
-        outIn: weekForecast(weekly.percentUsed, now, weekResetsAt),
       }
     }
 
