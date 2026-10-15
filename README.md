@@ -18,7 +18,7 @@ On a model with a smaller window the marks scale down to 60% and 80% of it, so t
 
 The question behind plan limits is simple: will I run out before it resets? usage-meter answers it with a color, so you don't have to read anything while things are fine.
 
-The pill is the five-hour window: the ring fills with what you've spent, and its color says whether it lasts until the reset. Green means it does. Amber means it's on pace to run out early, red means that's close (under 20 minutes), and it also goes amber at 60% and red at 85% regardless. The week never shows on the pill: it's in the card on hover.
+The pill is the five-hour window: the ring fills with what you've spent. Its color follows what the 5h strip in the card shows: green while you're behind the tick, amber once you've spent more than the share of time gone, red from 85%. The week never shows on the pill: it's in the card on hover.
 
 Hover the pill for one strip a window:
 
@@ -27,9 +27,9 @@ Hover the pill for one strip a window:
 Week  ━━│─────────────   ↻ 6d
 ```
 
-The fill is what you've spent, the tick is how much of the window's time has gone, and `↻` is the time until it resets. Fill past the tick means you're spending faster than time passes. The 5h strip takes the same color as the ring; the Week strip goes amber when the week is on pace to run out before its reset, red when that's under a day away.
+The fill is what you've spent, the tick is how much of the window's time has gone, and `↻` is the time until it resets. Fill past the tick means you're spending faster than time passes. That is also what colors each strip: amber past the tick, red from 85%. The 5h strip and the ring always share a color.
 
-The five-hour forecast reads the pace of the last half hour and stays quiet under 40% used, where one busy stretch would raise false alarms. The week's forecast reads its average pace since the reset and waits for the first 12 hours.
+The first half hour of the five-hour window and the first 12 hours of the week never warn: there a single reply already puts the fill past the tick.
 
 The two mods sit side by side in the same row. Install either or both.
 

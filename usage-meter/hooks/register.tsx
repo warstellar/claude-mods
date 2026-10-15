@@ -1,38 +1,22 @@
 import { atom, read, update } from 'claude-code'
 import type { Hook, Register } from 'claude-code'
 
-import type { Sample, Week, Window } from '../types'
+import type { Week, Window } from '../types'
 
 const fiveHour = atom({ plugin: 'usage-meter', key: 'window' } as const, null)
 
-const WATCH_AT = 60
 const HOT_AT = 85
 const COLORS = { ok: '#1D9E75', watch: '#EF9F27', hot: '#E24B4A' } as const
 const MUTED = '#888780'
 const RING = 2 * Math.PI * 6
 
-// The forecast reads the pace of the last half hour, so an idle hour earlier
-// doesn't flatter it, and waits for enough history not to jump around.
-const PACE_WINDOW = 30 * 60_000
-const MIN_SPAN = 5 * 60_000
-const MIN_DELTA = 1
-const KEEP_FOR = 2 * 60 * 60_000
-const URGENT = 20 * 60_000
-// Below this share a fast burst says little: the forecast stays hidden, so the
-// pill and the card never disagree about whether to worry.
-const FORECAST_FROM = 40
+// The first stretch of a window is too short to judge the pace by: a single
+// reply would already put the fill past the tick.
+const FIVE_MIN_ELAPSED = 0.1
 
-// The week is forecast from its own average pace: a busy afternoon shouldn't
-// read as the whole week. The first half day is too short to say anything.
+// The week waits for its first half day for the same reason.
 const WEEK = 7 * 24 * 60 * 60_000
 const WEEK_MIN_ELAPSED = 12 * 60 * 60_000
-const WEEK_URGENT = 24 * 60 * 60_000
-
-export function level(percent: number): 'ok' | 'watch' | 'hot' {
-  if (percent >= HOT_AT) return 'hot'
-  if (percent >= WATCH_AT) return 'watch'
-  return 'ok'
-}
 
 export function formatLeft(ms: number): string {
   const minutes = Math.max(0, Math.round(ms / 60_000))
@@ -41,45 +25,6 @@ export function formatLeft(ms: number): string {
   const m = minutes % 60
   if (d > 0) return h > 0 ? `${d}d ${h}h` : `${d}d`
   return h > 0 ? `${h}h ${m}m` : `${m}m`
-}
-
-// Keeps one sample per change of the reading; a new window (the reset moved,
-// or usage fell) starts the history over.
-export function record(
-  samples: readonly Sample[],
-  sample: Sample,
-  resetsAt: number | null,
-  lastResetsAt: number | null,
-): Sample[] {
-  const last = samples.at(-1)
-  const isNewWindow =
-    (last !== undefined && sample.percent < last.percent - 0.5) ||
-    (resetsAt !== null && lastResetsAt !== null && Math.abs(resetsAt - lastResetsAt) > 60_000)
-  const kept = isNewWindow ? [] : samples.filter(s => s.at >= sample.at - KEEP_FOR)
-  if (kept.at(-1)?.percent === sample.percent) return kept
-  return [...kept, sample]
-}
-
-// Milliseconds until the window runs out at the recent pace, or null when it
-// won't run out before it resets (or there isn't enough history to say).
-export function forecast(
-  samples: readonly Sample[],
-  percent: number,
-  now: number,
-  resetsAt: number | null,
-): number | null {
-  const start = now - PACE_WINDOW
-  const before = samples.filter(s => s.at <= start).at(-1)
-  const base = before ? { at: start, percent: before.percent } : samples[0]
-  if (base === undefined) return null
-
-  const span = now - base.at
-  const delta = percent - base.percent
-  if (span < MIN_SPAN || delta < MIN_DELTA) return null
-
-  const msToEmpty = ((100 - percent) / delta) * span
-  if (resetsAt !== null && now + msToEmpty >= resetsAt) return null
-  return msToEmpty
 }
 
 // Milliseconds until the week runs out at its average pace so far, or null
@@ -95,24 +40,28 @@ export function weekForecast(percent: number, now: number, resetsAt: number | nu
 
 export type Level = 'ok' | 'watch' | 'hot'
 
-const RANK: Record<Level, number> = { ok: 0, watch: 1, hot: 2 }
-const worst = (a: Level, b: Level): Level => (RANK[a] >= RANK[b] ? a : b)
+const FIVE_HOURS = 5 * 60 * 60_000
 
-// The five-hour forecast, once enough is spent that it means something rather
-// than one busy burst; null otherwise.
-export function fiveOut(win: Window): number | null {
-  return win.outIn !== null && win.percent >= FORECAST_FROM ? win.outIn : null
+function elapsedShare(resetsAt: number | null, readAt: number, length: number): number | null {
+  if (resetsAt === null) return null
+  return Math.min(1, Math.max(0, 1 - (resetsAt - readAt) / length))
 }
 
+// The color says what the strip shows: amber when the fill has passed the
+// tick (spending faster than time passes), red only when little is left.
 export function fiveLevel(win: Window): Level {
-  const out = fiveOut(win)
-  if (out === null) return level(win.percent)
-  return worst(level(win.percent), out <= URGENT ? 'hot' : 'watch')
+  if (win.percent >= HOT_AT) return 'hot'
+  const elapsed = elapsedShare(win.resetsAt, win.readAt, FIVE_HOURS)
+  if (elapsed !== null && elapsed >= FIVE_MIN_ELAPSED && win.percent / 100 > elapsed) return 'watch'
+  return 'ok'
 }
 
+// Same rule for the week: past the tick is amber (its average pace beats the
+// reset), red only when little is left.
 export function weekLevel(week: Week | null): Level {
-  if (week === null || week.outIn === null) return 'ok'
-  return week.outIn <= WEEK_URGENT ? 'hot' : 'watch'
+  if (week === null) return 'ok'
+  if (week.percent >= HOT_AT) return 'hot'
+  return week.outIn === null ? 'ok' : 'watch'
 }
 
 export type Strip = {
@@ -125,16 +74,9 @@ export type Strip = {
   timer: string | null
 }
 
-const FIVE_HOURS = 5 * 60 * 60_000
-
-function elapsedShare(resetsAt: number | null, readAt: number, length: number): number | null {
-  if (resetsAt === null) return null
-  return Math.min(1, Math.max(0, 1 - (resetsAt - readAt) / length))
-}
-
 // The hover card: one strip a window, drawn the same way. Fill past the tick
-// means spending faster than time passes; the color follows the same rules
-// as the pill, so the ring and the 5h strip always match.
+// means spending faster than time passes, and that is what turns it amber;
+// the ring and the 5h strip share one color.
 export function strips(win: Window): Strip[] {
   const rows: Strip[] = [
     {
@@ -216,11 +158,6 @@ async function refresh($: Parameters<Hook<'turn.complete'>>[0]) {
 
     const now = await $.clock.now()
     const resetsAt = found.resetsAt ? Date.parse(found.resetsAt) : null
-    const stored = ((await $.store.get('samples')) ?? []) as Sample[]
-    const lastResetsAt = ((await $.store.get('resetsAt')) ?? null) as number | null
-    const samples = record(stored, { at: now, percent: found.percentUsed }, resetsAt, lastResetsAt)
-    await $.store.set('samples', samples)
-    await $.store.set('resetsAt', resetsAt)
 
     let week: Week | null = null
     if (weekly !== undefined) {
@@ -236,7 +173,6 @@ async function refresh($: Parameters<Hook<'turn.complete'>>[0]) {
       percent: found.percentUsed,
       resetsAt,
       readAt: now,
-      outIn: forecast(samples, found.percentUsed, now, resetsAt),
       week,
     }
     await update($, fiveHour, () => next)
@@ -249,7 +185,7 @@ export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     const result = await next(e)
     await refresh($)
-    // The countdown and the pace move even when nobody types.
+    // The countdown and the tick move even when nobody types.
     $.clock.every(60_000, () => refresh($))
     return result
   })
