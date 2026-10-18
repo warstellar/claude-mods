@@ -24,11 +24,11 @@ Hover the pill for one row a window:
 
 ```
                      ▾
-5h     81%  ━━━━━━━━━━━┃━━──  ↗ +7%    ↻ 1h 19m
+5h     81%  ━━━━━━━━━━━━━━──  ↗ +7%    ↻ 1h 19m
 Week   10%  ━━──▾───────────  ↘ −33%       ↻ 4d
 ```
 
-Each row reads left to right: the window, what's spent, a bar of the same, the pace read off that bar, and last, quietly, the time until the reset. The small marker above the bar is how much of the window's time has gone. Spending past it is split off as a paler amber stretch, and the arrow says the same with a number: `↗ +7%` ahead of the window's time, `↘ −33%` behind it, `→` when you're within 5% of it. The pace stays quiet for the first half hour of the five-hour window and the first 12 hours of the week, where a single reply would read as racing ahead. The bars use the same thresholds as the pill, so the 5h bar and the ring always share a color.
+Each row reads left to right: the window, what's spent, a bar of the same, the pace read off that bar, and last, quietly, the time until the reset. The small marker above the bar is how much of the window's time has gone. Fill past it means you're spending ahead of time, and the arrow puts a number on it: `↗ +7%` ahead of the window's time, `↘ −33%` behind it, `→` when you're within 5% of it. The pace stays quiet for the first half hour of the five-hour window and the first 12 hours of the week, where a single reply would read as racing ahead. The bars use the same thresholds as the pill, so the 5h bar and the ring always share a color.
 
 The two mods sit side by side in the same row. Install either or both.
 

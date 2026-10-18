@@ -169,9 +169,9 @@ export function cardHeight(rows: number): number {
 
 // The whole card as one picture, so the rows line up to the pixel, drawn
 // like the app's own usage bars: a flat track with a solid fill. The marker
-// above the bar is how much of the window's time has gone. Spending past it
-// is split off in amber, and the arrow and number right after the bar say how
-// far ahead or behind you are; the reset comes last.
+// above the bar is how much of the window's time has gone, so fill past it
+// is spending ahead of time; the arrow and number right after the bar say by
+// how much. The reset comes last.
 export function cardSvg(rows: readonly Strip[]): string {
   const body = rows
     .map((row, i) => {
@@ -180,11 +180,7 @@ export function cardSvg(rows: readonly Strip[]): string {
       const color = COLORS[row.level]
       const fillEnd = BAR_X + Math.min(1, row.spent) * BAR_W
       const tickX = row.elapsed === null ? null : BAR_X + row.elapsed * BAR_W
-      const split = row.pace === 'ahead' && tickX !== null
-      const fill = split
-        ? `<rect x="${BAR_X}" y="${y}" width="${(tickX - BAR_X - 1).toFixed(1)}" height="${BAR_H}" fill="${color}"/>
-<rect x="${(tickX + 1).toFixed(1)}" y="${y}" width="${(fillEnd - tickX - 1).toFixed(1)}" height="${BAR_H}" fill="${COLORS.watch}" fill-opacity="0.5"/>`
-        : `<rect x="${BAR_X}" y="${y}" width="${(fillEnd - BAR_X).toFixed(1)}" height="${BAR_H}" fill="${color}"/>`
+      const fill = `<rect x="${BAR_X}" y="${y}" width="${(fillEnd - BAR_X).toFixed(1)}" height="${BAR_H}" fill="${color}"/>`
       const marker =
         tickX === null
           ? ''
