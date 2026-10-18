@@ -18,16 +18,17 @@ On a model with a smaller window the marks scale down to 60% and 80% of it, so t
 
 The question behind plan limits is simple: will I run out before it resets? usage-meter answers it with a color, so you don't have to read anything while things are fine.
 
-The pill is the five-hour window: the ring fills with what you've spent. Green below 70%, amber from 70%, red from 90%. The week never shows on the pill: it's in the card on hover.
+The pill is the five-hour window: the ring fills with what you've spent. Green below 70%, amber from 70%, red from 90%. An arrow `↗` after the number means you're spending the window faster than its time passes. The week never shows on the pill: it's in the card on hover.
 
-Hover the pill for one strip a window:
+Hover the pill for one row a window:
 
 ```
-5h    ━━━━━━━│────────   ↻ 3h 10m
-Week  ━━│─────────────   ↻ 6d
+                     ▾
+5h     81%  ━━━━━━━━━━━┃━━──  ↗ +7%    ↻ 1h 19m
+Week   10%  ━━──▾───────────  ↘ −33%       ↻ 4d
 ```
 
-The fill is what you've spent, the tick is how much of the window's time has gone, and `↻` is the time until it resets. Fill past the tick means you're spending faster than time passes. Each strip uses the same thresholds as the pill, so the 5h strip and the ring always share a color.
+Each row reads left to right: the window, what's spent, a bar of the same, the pace read off that bar, and last, quietly, the time until the reset. The small marker above the bar is how much of the window's time has gone. Spending past it is split off as a paler amber stretch, and the arrow says the same with a number: `↗ +7%` ahead of the window's time, `↘ −33%` behind it, `→` when you're within 5% of it. The pace stays quiet for the first half hour of the five-hour window and the first 12 hours of the week, where a single reply would read as racing ahead. The bars use the same thresholds as the pill, so the 5h bar and the ring always share a color.
 
 The two mods sit side by side in the same row. Install either or both.
 

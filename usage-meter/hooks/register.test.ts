@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { cardText, fiveLevel, formatLeft, level, pillSvg, stripSvg, strips, weekLevel } from './register'
+import { cardText, fiveAhead, fiveLevel, formatLeft, level, pace, pillSvg, pillWidth, cardSvg, paceGap, strips, weekLevel } from './register'
 
 const MIN = 60_000
 const HOUR = 60 * MIN
@@ -55,17 +55,57 @@ test('the 5h strip always takes the same color as the ring', () => {
   const w = win({ percent: 80 })
   const [five] = strips(w)
   expect(five?.level).toBe(fiveLevel(w))
-  expect(stripSvg(five!)).toContain('#EF9F27')
+  expect(cardSvg([five!])).toContain('#EF9F27')
 })
 
 test('a reading from an older version still draws', () => {
   const old = { percent: 6, resetsAt: null, readAt: T0, outIn: 5 * MIN } as unknown as Parameters<typeof strips>[0]
   expect(strips(old).length).toBe(1)
   expect(fiveLevel(old)).toBe('ok')
-  expect(stripSvg(strips(old)[0]!)).not.toContain('width="2"')
+  expect(cardSvg(strips(old))).not.toContain('<polygon')
   expect(cardText(old)).toBe('5h: 6% used')
 })
 
 test('spoken text names the reset', () => {
   expect(cardText(win({}))).toBe('5h: 12% used, resets in 3h 25m')
+})
+
+test('pace: ahead or behind only past a margin, and quiet early in a window', () => {
+  expect(pace(0.4, 0.3, 0.1)).toBe('ahead')
+  expect(pace(0.32, 0.3, 0.1)).toBe('on')
+  expect(pace(0.2, 0.3, 0.1)).toBe('behind')
+  expect(pace(0.08, 0.05, 0.1)).toBe(null)
+  expect(pace(0.5, null, 0.1)).toBe(null)
+})
+
+test('the pill gets an arrow only when the 5h window races ahead', () => {
+  // About 32% of the time gone.
+  expect(fiveAhead(win({ percent: 45 }))).toBe(true)
+  expect(fiveAhead(win({ percent: 30 }))).toBe(false)
+  expect(pillSvg(45, 'ok', true)).toContain('<path')
+  expect(pillSvg(45, 'ok')).not.toContain('<path')
+  expect(pillWidth(45, true)).toBeGreaterThan(pillWidth(45))
+})
+
+test('the card spells out the pace of each window', () => {
+  const [five, week] = strips(win({ percent: 10, week: { percent: 40, resetsAt: T0 + 5 * DAY } }))
+  expect(five?.pace).toBe('behind')
+  // Two days of seven gone, 40% spent.
+  expect(week?.pace).toBe('ahead')
+  expect(cardText(win({ percent: 45 }))).toContain('faster than the window')
+})
+
+test('the card shows how far ahead or behind each window is', () => {
+  // About 32% of the five hours gone.
+  const [ahead] = strips(win({ percent: 45 }))
+  expect(paceGap(ahead!)).toBe(13)
+  const svg = cardSvg([ahead!])
+  expect(svg).toContain('+13%')
+  expect(svg).toContain('#EF9F27')
+  const [behind] = strips(win({ percent: 10 }))
+  expect(cardSvg([behind!])).toContain('−22%')
+  // On pace: the gauge, no number.
+  const [even] = strips(win({ percent: 33 }))
+  expect(even?.pace).toBe('on')
+  expect(cardSvg([even!])).not.toMatch(/[+−]\d+%/)
 })
