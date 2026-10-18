@@ -140,6 +140,12 @@ function arrow(pace: Pace, cx: number, cy: number, color: string): string {
   return `<path d="M-4.5 0 H4.5 M1 -3.5 L4.5 0 L1 3.5" transform="translate(${cx.toFixed(1)} ${cy}) rotate(${TURN[pace]})" fill="none" stroke="${color}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`
 }
 
+// The reset mark, drawn rather than typed so it matches the arrows: the
+// usual rotate-clockwise icon, scaled into the same 10px box.
+function resetIcon(cx: number, cy: number, color: string): string {
+  return `<g transform="translate(${(cx - 5).toFixed(1)} ${cy - 5}) scale(0.42)" fill="none" stroke="${color}" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></g>`
+}
+
 function text(x: number, cy: number, body: string, attrs: string): string {
   return `<text x="${x.toFixed(1)}" y="${cy}" dominant-baseline="central" ${attrs}>${body}</text>`
 }
@@ -153,8 +159,9 @@ const BAR_W = 150
 const BAR_H = 8
 const ICON_CX = BAR_X + BAR_W + 14
 const DELTA_X = ICON_CX + 10
-const TIMER_END = DELTA_X + 100
-export const CARD_WIDTH = TIMER_END + 2
+const RESET_CX = DELTA_X + 50
+const TIMER_X = RESET_CX + 9
+export const CARD_WIDTH = TIMER_X + 56
 
 export function cardHeight(rows: number): number {
   return rows * ROW
@@ -195,7 +202,8 @@ ${text(PCT_END, cy, `${Math.round(row.spent * 100)}%`, `font-size="12" font-weig
 ${fill}
 </g>
 ${marker}
-${row.timer === null ? '' : text(TIMER_END, cy, `↻ ${row.timer}`, `font-size="10" text-anchor="end" fill="${MUTED}" fill-opacity="0.8"`)}
+${row.timer === null ? '' : `${resetIcon(RESET_CX, cy, MUTED)}
+${text(TIMER_X, cy, row.timer, `font-size="11" fill="${MUTED}"`)}`}
 ${row.pace === null ? '' : arrow(row.pace, ICON_CX, cy, paceColor)}
 ${gap === null || row.pace === 'on' ? '' : text(DELTA_X, cy, `${gap > 0 ? '+' : '−'}${Math.abs(gap)}%`, `font-size="11" fill="${paceColor}"`)}
 </g>`
